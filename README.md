@@ -1,7 +1,8 @@
 # EEZYRoboticArmAPI
 
-3D printed robotic arm that uses stepper motors and it's connected to a raspberry pi 4 that sends the steps/instructions.
+3D printed robotic arm that uses stepper motors and it's connected to a raspberry pi 4 that sends the steps/instructions.</br>
 
+**Youtube video:** </br>
 [![](http://img.youtube.com/vi/6QX1YFKg4C8/0.jpg)](http://www.youtube.com/watch?v=6QX1YFKg4C8 "Robotic Arm")
 
 ## Raspberry pi project API
