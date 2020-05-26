@@ -114,6 +114,10 @@ GPIO18 | IN4
 GND | GND
 5V | 5V
 
+Thingiverse Model
+-----
+https://www.thingiverse.com/thing:2838859
+
 
 License
 ------
