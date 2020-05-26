@@ -1,11 +1,16 @@
 # EEZYRoboticArmAPI
 
-3D printed robotic arm that uses stepper motors and it's connected to a raspberry pi 4 that sends the steps/instructions.</br>
+3D printed robotic arm that uses stepper motors and it's connected to a raspberry pi 4 that sends the steps/instructions.
 
-**Youtube video:** </br>
-[![](http://img.youtube.com/vi/6QX1YFKg4C8/0.jpg)](http://www.youtube.com/watch?v=6QX1YFKg4C8 "Robotic Arm")
+ Demo 
+------
+<img src="https://github.com/ManolescuSebastian/EEZYRoboticArmAPI/blob/master/images/3D_Printed_Robotic_arm.gif" width="55%"></img>
+ 
+ **Full Youtube video:**
+[Robotic Arm](http://www.youtube.com/watch?v=6QX1YFKg4C8 "Robotic Arm")
 
-## Raspberry pi project API
+API
+-----
 
 Endpoints:
 
@@ -75,7 +80,8 @@ Response:
 ```
 </br>
 
-### Hardware connection between Raspberry PI and ULN2003 Driver Board
+Hardware connection between Raspberry PI and ULN2003 Driver Board
+------
 
 Raspberry pi | ULN2003 Driver Board (1) Up/ Down
 ------------ | -------------
@@ -108,7 +114,10 @@ GPIO18 | IN4
 GND | GND
 5V | 5V
 
-</br></br>
+
+License
+------
+
     Copyright 2019
 
     Licensed under the Apache License, Version 2.0 (the "License");
