@@ -1,0 +1,270 @@
+/* ============================================================
+   EEZY Robotic Arm — control UI
+   Dark, high-contrast, touch-first. One accent colour.
+   ============================================================ */
+
+:root {
+    --bg: #0e0f12;
+    --bg-elev: #171a1f;
+    --bg-elev-2: #1f242b;
+    --border: #262c35;
+    --text: #e8ecf1;
+    --text-dim: #8891a0;
+    --accent: #ff8a3d;         /* warm amber — matches the "machine" feel */
+    --accent-dim: #4a2c15;
+    --danger: #ff4b4b;
+    --radius: 14px;
+    --pad-size: 90px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Ubuntu, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    height: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--border);
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    font-size: 14px;
+}
+.dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+    transition: background 0.15s;
+}
+.dot.online  { background: #3ddc84; }
+.dot.moving  { background: var(--accent); animation: pulse 0.8s infinite; }
+.dot.offline { background: var(--danger); }
+@keyframes pulse { 50% { opacity: 0.4; } }
+
+.btn-stop {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,75,75,0.3);
+    transition: transform 0.08s;
+}
+.btn-stop:active { transform: scale(0.95); }
+
+/* ---------- Main stage: 3-column layout ---------- */
+.stage {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 20px;
+    padding: 24px 20px 8px;
+    align-items: center;
+    min-height: 0;
+}
+
+.joint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+.joint h2 {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin: 0 0 6px;
+    font-weight: 600;
+}
+
+/* Directional pad buttons */
+.pad {
+    width: var(--pad-size);
+    height: var(--pad-size);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text);
+    font-size: 32px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, border-color 0.12s, transform 0.08s, color 0.12s;
+    position: relative;
+}
+.pad:hover { background: var(--bg-elev-2); }
+.pad:active, .pad.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a0e05;
+    transform: scale(0.96);
+    box-shadow: 0 0 24px rgba(255,138,61,0.4);
+}
+
+/* Arm visual */
+.arm-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-height: 320px;
+    opacity: 0.9;
+}
+.arm-base,
+.arm-base-body { fill: var(--border); }
+.arm-segment { fill: var(--bg-elev-2); stroke: var(--border); stroke-width: 1; }
+.arm-joint { fill: var(--accent); }
+.arm-claw-finger { stroke: var(--text); stroke-width: 2; fill: none; stroke-linecap: round; }
+
+/* Highlight an arm segment when its joint is being moved */
+.arm-visual .active-viz { fill: var(--accent) !important; filter: drop-shadow(0 0 8px var(--accent)); }
+
+/* ---------- Base row ---------- */
+.base-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 10px 20px;
+}
+.base-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+.base-row .pad { width: 76px; height: 76px; font-size: 28px; }
+
+/* ---------- Claw ---------- */
+.claw-row {
+    padding: 18px 24px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.claw-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+}
+.claw-label #claw-value { color: var(--accent); letter-spacing: 1px; }
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 10px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 12px rgba(255,138,61,0.5);
+}
+input[type="range"]::-moz-range-thumb {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--bg);
+}
+
+/* ---------- Recorder footer ---------- */
+.recorder {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--bg-elev);
+    border-top: 1px solid var(--border);
+    gap: 14px;
+}
+.rec-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+.rec-count { font-weight: 600; font-size: 14px; }
+.rec-last {
+    color: var(--text-dim);
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.rec-actions { display: flex; gap: 10px; }
+.rec-btn {
+    background: var(--bg-elev-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+.rec-btn:hover { background: #2a313b; }
+.rec-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a0e05;
+}
+.rec-btn.primary:hover { filter: brightness(1.1); }
+
+/* ---------- Small-screen tweaks ---------- */
+@media (max-width: 480px) {
+    :root { --pad-size: 76px; }
+    .stage { padding: 16px 12px 4px; gap: 10px; }
+    .pad { font-size: 26px; }
+}

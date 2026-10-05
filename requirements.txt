@@ -1,0 +1,6 @@
+Flask==3.0.3
+# Pi 4 / older: RPi.GPIO is picked up automatically.
+# Pi 5: install rpi-lgpio instead — it provides an RPi.GPIO-compatible API.
+RPi.GPIO==0.7.1 ; platform_machine == "armv7l" or platform_machine == "aarch64"
+# Uncomment the next line if you're on a Pi 5 (and comment out RPi.GPIO above):
+# rpi-lgpio==0.6

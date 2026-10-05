@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#0e0f12">
+    <title>EEZY Arm Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+    <div class="brand">
+        <span class="dot" id="status-dot"></span>
+        <span>EEZY ARM</span>
+    </div>
+    <button id="btn-stop" class="btn-stop" aria-label="Emergency stop">STOP</button>
+</header>
+
+<main class="stage">
+    <!-- Shoulder (up/down) column -->
+    <section class="joint" aria-label="Shoulder">
+        <h2>SHOULDER</h2>
+        <button class="pad up"   data-axis="up"   aria-label="Up">▲</button>
+        <button class="pad down" data-axis="down" aria-label="Down">▼</button>
+    </section>
+
+    <!-- Arm schematic (center) -->
+    <section class="arm-visual" aria-hidden="true">
+        <svg viewBox="0 0 160 220" width="100%" height="100%">
+            <!-- base -->
+            <ellipse cx="80" cy="200" rx="55" ry="10" class="arm-base"/>
+            <rect x="60" y="170" width="40" height="32" rx="4" class="arm-base-body" id="viz-base"/>
+            <!-- lower arm -->
+            <rect x="72" y="90" width="16" height="90" rx="6" class="arm-segment" id="viz-shoulder"/>
+            <!-- upper arm -->
+            <rect x="72" y="40" width="16" height="60" rx="6" class="arm-segment" id="viz-elbow"/>
+            <!-- claw -->
+            <g id="viz-claw">
+                <circle cx="80" cy="36" r="7" class="arm-joint"/>
+                <path d="M 70 20 L 72 36 M 90 20 L 88 36" class="arm-claw-finger"/>
+            </g>
+        </svg>
+    </section>
+
+    <!-- Elbow (forward/backward) column -->
+    <section class="joint" aria-label="Elbow">
+        <h2>ELBOW</h2>
+        <button class="pad fwd"  data-axis="forward"  aria-label="Forward">◀</button>
+        <button class="pad bwd"  data-axis="backward" aria-label="Backward">▶</button>
+    </section>
+</main>
+
+<section class="base-row" aria-label="Base rotation">
+    <button class="pad rot-ccw" data-axis="rotate_ccw" aria-label="Rotate counter-clockwise">↺</button>
+    <div class="base-label">BASE</div>
+    <button class="pad rot-cw" data-axis="rotate_cw" aria-label="Rotate clockwise">↻</button>
+</section>
+
+<section class="claw-row">
+    <label for="claw" class="claw-label">
+        CLAW <span id="claw-value">0°</span>
+    </label>
+    <input id="claw" type="range" min="0" max="180" step="1" value="0">
+</section>
+
+<footer class="recorder">
+    <div class="rec-info">
+        <span class="rec-count"><span id="rec-count">0</span> steps</span>
+        <span class="rec-last" id="rec-last">idle</span>
+    </div>
+    <div class="rec-actions">
+        <button id="btn-clear" class="rec-btn">Clear</button>
+        <button id="btn-replay" class="rec-btn primary">Replay</button>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
