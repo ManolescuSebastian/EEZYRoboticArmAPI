@@ -67,5 +67,9 @@ class Stepper:
                     sleep(STEP_DELAY_SEC)
             executed += 1
 
-        self.release()
+        # Only release if we were interrupted. Otherwise the next batch in a
+        # continuous move needs the coils still energised to avoid stutter —
+        # the caller is responsible for calling release() when actually done.
+        if stop_event.is_set():
+            self.release()
         return executed

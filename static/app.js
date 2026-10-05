@@ -1,12 +1,9 @@
 // EEZY Robotic Arm — frontend controller.
 //
-// Hold-to-move: while a pad is held down, the client fires /api/move with
-// HOLD_STEPS steps every HOLD_INTERVAL_MS. Release stops firing. This gives
-// an analog "pressed = moving" feel while the backend still handles each
-// burst as an interruptible background movement.
+// Press-and-hold model: button-down fires a single /move_start; button-up
+// fires /stop. The server steps continuously in between so the motion is
+// smooth, with no gaps between HTTP bursts.
 
-const HOLD_STEPS = 5;
-const HOLD_INTERVAL_MS = 120;
 const CLAW_DEBOUNCE_MS = 150;
 const STATUS_POLL_MS = 400;
 
@@ -31,11 +28,10 @@ async function api(path, body) {
 }
 
 // -----------------------------------------------------------------
-// Hold-to-move on the directional pads
+// Directional pads: hold-to-move via start/stop
 // -----------------------------------------------------------------
 const pads = document.querySelectorAll(".pad");
 
-// Which visual element to highlight for each axis
 const axisVisual = {
     up: "viz-shoulder", down: "viz-shoulder",
     forward: "viz-elbow", backward: "viz-elbow",
@@ -46,28 +42,18 @@ for (const pad of pads) {
     const axis = pad.dataset.axis;
     if (!axis) continue;
 
-    let holdTimer = null;
-
     const start = (ev) => {
         ev.preventDefault();
-        if (holdTimer) return;
+        if (pad.classList.contains("active")) return;
         pad.classList.add("active");
         highlightViz(axis, true);
-        // Fire immediately, then at interval while held.
-        api("/move", { axis, steps: HOLD_STEPS });
-        holdTimer = setInterval(
-            () => api("/move", { axis, steps: HOLD_STEPS }),
-            HOLD_INTERVAL_MS
-        );
+        api("/move_start", { axis });
     };
 
     const stop = () => {
-        if (!holdTimer) return;
-        clearInterval(holdTimer);
-        holdTimer = null;
+        if (!pad.classList.contains("active")) return;
         pad.classList.remove("active");
         highlightViz(axis, false);
-        // Tell the backend to stop any in-flight burst so the arm halts cleanly.
         api("/stop", {});
     };
 
@@ -75,7 +61,6 @@ for (const pad of pads) {
     pad.addEventListener("pointerup", stop);
     pad.addEventListener("pointerleave", stop);
     pad.addEventListener("pointercancel", stop);
-    // Keyboard: focus + hold space/enter
     pad.addEventListener("keydown", (e) => {
         if (e.key === " " || e.key === "Enter") start(e);
     });
@@ -149,32 +134,27 @@ pollStatus();
 setInterval(pollStatus, STATUS_POLL_MS);
 
 // -----------------------------------------------------------------
-// Keyboard shortcuts for desk use
+// Keyboard shortcuts: W/S shoulder, A/D elbow, Q/E base, Space = stop
 // -----------------------------------------------------------------
-// W/S shoulder, A/D elbow, Q/E base, Space = stop
 const keyMap = {
     w: "up", s: "down",
     a: "forward", d: "backward",
     q: "rotate_ccw", e: "rotate_cw",
 };
-const keyHoldTimers = {};
+const keyActive = {};
 document.addEventListener("keydown", (ev) => {
     if (ev.repeat) return;
     if (ev.key === " ") { api("/stop", {}); return; }
     const axis = keyMap[ev.key.toLowerCase()];
-    if (!axis || keyHoldTimers[axis]) return;
+    if (!axis || keyActive[axis]) return;
+    keyActive[axis] = true;
     highlightViz(axis, true);
-    api("/move", { axis, steps: HOLD_STEPS });
-    keyHoldTimers[axis] = setInterval(
-        () => api("/move", { axis, steps: HOLD_STEPS }),
-        HOLD_INTERVAL_MS
-    );
+    api("/move_start", { axis });
 });
 document.addEventListener("keyup", (ev) => {
     const axis = keyMap[ev.key.toLowerCase()];
-    if (!axis || !keyHoldTimers[axis]) return;
-    clearInterval(keyHoldTimers[axis]);
-    delete keyHoldTimers[axis];
+    if (!axis || !keyActive[axis]) return;
+    delete keyActive[axis];
     highlightViz(axis, false);
     api("/stop", {});
 });

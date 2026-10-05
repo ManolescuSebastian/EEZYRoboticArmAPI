@@ -61,7 +61,7 @@ class MotionService:
     # Movement
     # ------------------------------------------------------------------
     def move(self, axis: Axis, steps: int, record: bool = True) -> bool:
-        """Request a movement. Returns False if another move is already running."""
+        """Request a fixed-size movement. Returns False if a move is already running."""
         with self._lock:
             if self.is_running:
                 logger.debug("Rejecting %s/%d: motor already busy", axis, steps)
@@ -72,6 +72,25 @@ class MotionService:
                 args=(axis, steps, record),
                 daemon=True,
                 name=f"move-{axis}",
+            )
+            self._worker.start()
+            return True
+
+    def move_continuous(self, axis: Axis, record: bool = True) -> bool:
+        """Start stepping continuously until stop() is called.
+
+        Used for hold-to-move: the UI calls this on button-down and stop()
+        on button-up, giving smooth uninterrupted motion while held.
+        """
+        with self._lock:
+            if self.is_running:
+                return False
+            self._stop_event.clear()
+            self._worker = threading.Thread(
+                target=self._run_continuous,
+                args=(axis, record),
+                daemon=True,
+                name=f"move-continuous-{axis}",
             )
             self._worker.start()
             return True
@@ -143,11 +162,42 @@ class MotionService:
             attr, forward = mapping
             stepper: Stepper = getattr(self, attr)
             executed = stepper.step(steps, forward, self._stop_event)
+            stepper.release()
             self._last_action = f"{axis} x{executed}"
             if record and executed > 0:
                 self._recording.append(MotorStep(axis=axis, value=executed))
         except Exception:
             logger.exception("Movement failed")
+
+    def _run_continuous(self, axis: Axis, record: bool) -> None:
+        """Step in a tight loop until stop_event fires.
+
+        Batches are kept small (20 units) so stop response stays fast —
+        the stop_event is checked between batches and inside the stepper.
+        Because stepper.step() no longer releases unless interrupted, the
+        coils stay energised across batches, giving smooth motion.
+        """
+        try:
+            mapping = self._AXIS_MAP.get(axis)
+            if mapping is None:
+                return
+            attr, forward = mapping
+            stepper: Stepper = getattr(self, attr)
+
+            total = 0
+            while not self._stop_event.is_set():
+                executed = stepper.step(20, forward, self._stop_event)
+                total += executed
+                if executed < 20:
+                    break  # stop fired mid-batch; stepper already released
+
+            # Make sure coils are released when the gesture ends.
+            stepper.release()
+            self._last_action = f"{axis} x{total}"
+            if record and total > 0:
+                self._recording.append(MotorStep(axis=axis, value=total))
+        except Exception:
+            logger.exception("Continuous move failed")
 
     def _run_replay(self) -> None:
         logger.info("Replaying %d recorded steps", len(self._recording))
@@ -164,5 +214,6 @@ class MotionService:
             attr, forward = mapping
             stepper: Stepper = getattr(self, attr)
             stepper.step(step.value, forward, self._stop_event)
+            stepper.release()
             self._last_action = f"replay {step.axis} x{step.value}"
         logger.info("Replay finished")

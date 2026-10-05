@@ -67,6 +67,19 @@ def move():
     return jsonify(ok=True, axis=axis, steps=steps)
 
 
+@api_bp.route("/move_start", methods=["POST"])
+def move_start():
+    """Begin continuous movement on an axis. Call /stop to end it."""
+    body = request.get_json(silent=True) or {}
+    axis = body.get("axis")
+    if axis not in _STEPPER_AXES:
+        return jsonify(error=f"invalid axis '{axis}'"), 400
+    accepted = get_service().move_continuous(axis)
+    if not accepted:
+        return jsonify(error="busy"), 409
+    return jsonify(ok=True, axis=axis)
+
+
 @api_bp.route("/claw", methods=["POST"])
 def claw():
     body = request.get_json(silent=True) or {}
