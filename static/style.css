@@ -137,22 +137,137 @@ body {
     box-shadow: 0 0 24px rgba(255,138,61,0.4);
 }
 
-/* Arm visual */
+/* ---------- Arm visual (EEZYbotARM MK3 side view) ---------- */
 .arm-visual {
     display: flex;
     align-items: center;
     justify-content: center;
-    max-height: 320px;
-    opacity: 0.9;
+    max-height: 340px;
+    opacity: 0.95;
 }
-.arm-base,
-.arm-base-body { fill: var(--border); }
-.arm-segment { fill: var(--bg-elev-2); stroke: var(--border); stroke-width: 1; }
-.arm-joint { fill: var(--accent); }
-.arm-claw-finger { stroke: var(--text); stroke-width: 2; fill: none; stroke-linecap: round; }
 
-/* Highlight an arm segment when its joint is being moved */
-.arm-visual .active-viz { fill: var(--accent) !important; filter: drop-shadow(0 0 8px var(--accent)); }
+.arm-shadow { fill: #000; opacity: 0.35; }
+
+/* Base */
+.arm-base-body {
+    fill: var(--bg-elev-2);
+    stroke: var(--border);
+    stroke-width: 1.5;
+}
+.arm-base-top {
+    fill: var(--bg-elev);
+    stroke: var(--border);
+    stroke-width: 1;
+}
+.arm-base-motor {
+    fill: var(--border);
+    stroke: #000;
+    stroke-width: 0.5;
+}
+
+/* Shoulder-pivot block and joint dots */
+.arm-pivot {
+    fill: var(--border);
+    stroke: #000;
+    stroke-width: 0.5;
+}
+.arm-joint-dot {
+    fill: var(--accent);
+    stroke: var(--bg);
+    stroke-width: 1;
+}
+
+/* Arm segments and parallelogram link */
+.arm-segment-main {
+    fill: var(--bg-elev-2);
+    stroke: var(--border);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+.arm-link {
+    stroke: var(--border);
+    stroke-width: 4;
+    fill: none;
+}
+
+/* Claw */
+.arm-claw-body {
+    fill: var(--bg-elev);
+    stroke: var(--border);
+    stroke-width: 1;
+}
+.arm-claw-finger-shape {
+    fill: var(--bg-elev-2);
+    stroke: var(--text);
+    stroke-width: 1;
+    stroke-linejoin: round;
+}
+
+/* ---- Per-axis highlight + animation while a direction button is held ---- */
+/* Shoulder: tilt the whole upper assembly up/down about its base pivot. */
+#viz-shoulder {
+    transition: transform 0.4s cubic-bezier(.4, 0, .2, 1);
+    transform: rotate(0deg);
+}
+.anim-up   #viz-shoulder { transform: rotate(-14deg); }
+.anim-down #viz-shoulder { transform: rotate( 10deg); }
+
+/* Elbow: tilt the forearm about the elbow pivot. */
+#viz-elbow {
+    transition: transform 0.4s cubic-bezier(.4, 0, .2, 1);
+    transform: rotate(0deg);
+}
+.anim-forward  #viz-elbow { transform: rotate(-12deg); }
+.anim-backward #viz-elbow { transform: rotate( 12deg); }
+
+/* Highlight the shoulder arm when up/down is driven. */
+.anim-up #viz-shoulder .arm-segment-main,
+.anim-down #viz-shoulder .arm-segment-main {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 10px rgba(255, 138, 61, 0.6));
+    transition: fill 0.1s;
+}
+.anim-up #viz-shoulder > .arm-link,
+.anim-down #viz-shoulder > .arm-link { stroke: var(--accent); }
+
+/* Highlight only the forearm when forward/backward is driven. */
+.anim-forward  #viz-elbow .arm-segment-main,
+.anim-backward #viz-elbow .arm-segment-main {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 10px rgba(255, 138, 61, 0.6));
+    transition: fill 0.1s;
+}
+.anim-forward  #viz-elbow .arm-link,
+.anim-backward #viz-elbow .arm-link { stroke: var(--accent); }
+
+/* Base rotation: side view can't truly spin, so flash a curved arrow. */
+.rot-indicator  { opacity: 0; transition: opacity 0.2s; }
+.rot-arrow      { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; fill: none; }
+.rot-arrow-head { fill: var(--accent); opacity: 0; }
+.anim-rotate_cw  .rot-indicator,
+.anim-rotate_ccw .rot-indicator { opacity: 1; }
+.anim-rotate_cw  #rot-head-cw   { opacity: 1; }
+.anim-rotate_ccw #rot-head-ccw  { opacity: 1; }
+
+/* Highlight the base body when rotating. */
+.anim-rotate_cw  #viz-base .arm-base-body,
+.anim-rotate_ccw #viz-base .arm-base-body,
+.anim-rotate_cw  #viz-base .arm-base-top,
+.anim-rotate_ccw #viz-base .arm-base-top {
+    fill: var(--accent);
+    filter: drop-shadow(0 0 10px rgba(255, 138, 61, 0.6));
+    transition: fill 0.1s;
+}
+
+/* Claw: fingers open/close based on a CSS variable set live by JS. */
+#viz-claw-upper {
+    transition: transform 0.15s;
+    transform: rotate(calc(var(--claw-open, 0) * -0.22deg));
+}
+#viz-claw-lower {
+    transition: transform 0.15s;
+    transform: rotate(calc(var(--claw-open, 0) *  0.22deg));
+}
 
 /* ---------- Base row ---------- */
 .base-row {

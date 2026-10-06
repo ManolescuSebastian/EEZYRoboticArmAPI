@@ -24,20 +24,71 @@
         <button class="pad down" data-axis="down" aria-label="Down">▼</button>
     </section>
 
-    <!-- Arm schematic (center) -->
+    <!-- Arm schematic — EEZYbotARM MK3 side view -->
     <section class="arm-visual" aria-hidden="true">
-        <svg viewBox="0 0 160 220" width="100%" height="100%">
-            <!-- base -->
-            <ellipse cx="80" cy="200" rx="55" ry="10" class="arm-base"/>
-            <rect x="60" y="170" width="40" height="32" rx="4" class="arm-base-body" id="viz-base"/>
-            <!-- lower arm -->
-            <rect x="72" y="90" width="16" height="90" rx="6" class="arm-segment" id="viz-shoulder"/>
-            <!-- upper arm -->
-            <rect x="72" y="40" width="16" height="60" rx="6" class="arm-segment" id="viz-elbow"/>
-            <!-- claw -->
-            <g id="viz-claw">
-                <circle cx="80" cy="36" r="7" class="arm-joint"/>
-                <path d="M 70 20 L 72 36 M 90 20 L 88 36" class="arm-claw-finger"/>
+        <svg viewBox="0 0 220 260" width="100%" height="100%">
+            <!-- Ground shadow -->
+            <ellipse cx="110" cy="248" rx="80" ry="6" class="arm-shadow"/>
+
+            <!-- Base: trapezoidal cylinder with a motor hump on the side -->
+            <g id="viz-base">
+                <path d="M 60 245 L 70 190 L 150 190 L 160 245 Z" class="arm-base-body"/>
+                <ellipse cx="110" cy="190" rx="40" ry="7" class="arm-base-top"/>
+                <!-- small base-motor nub -->
+                <circle cx="155" cy="222" r="8" class="arm-base-motor"/>
+                <!-- base rotation indicator (hidden by default; shown when base moves) -->
+                <g id="viz-base-rotation" class="rot-indicator">
+                    <path d="M 70 205 Q 110 195 150 205" fill="none" class="rot-arrow"/>
+                    <polygon points="150,205 144,200 144,210" class="rot-arrow-head" id="rot-head-cw"/>
+                    <polygon points="70,205 76,200 76,210"   class="rot-arrow-head" id="rot-head-ccw"/>
+                </g>
+            </g>
+
+            <!-- Pivot block on top of the base (shoulder joint anchor) -->
+            <rect x="95" y="178" width="30" height="14" rx="2" class="arm-pivot"/>
+            <circle cx="110" cy="185" r="3.5" class="arm-joint-dot"/>
+
+            <!-- Shoulder+Forearm assembly. The parallelogram linkage keeps the
+                 forearm/wrist bar level regardless of shoulder angle. Rotating
+                 this whole <g> around the shoulder pivot handles up/down. -->
+            <g id="viz-shoulder" style="transform-origin: 110px 185px;">
+                <!-- Rear control arm (the thinner parallelogram link) -->
+                <line x1="110" y1="185" x2="150" y2="110"
+                      class="arm-link" stroke-linecap="round"/>
+                <!-- Main shoulder arm (thick back arm) -->
+                <path d="M 102 185 L 94 110 L 110 108 L 118 183 Z" class="arm-segment-main"/>
+
+                <!-- Elbow pivot at the top -->
+                <circle cx="106" cy="110" r="4" class="arm-joint-dot"/>
+
+                <!-- Forearm assembly — rotates about the elbow pivot. -->
+                <g id="viz-elbow" style="transform-origin: 106px 110px;">
+                    <!-- Lower forearm bar (main structural member) -->
+                    <path d="M 106 110 L 180 100 L 184 112 L 110 122 Z"
+                          class="arm-segment-main"/>
+                    <!-- Upper parallelogram bar (keeps claw level) -->
+                    <line x1="124" y1="98" x2="186" y2="90"
+                          class="arm-link" stroke-linecap="round"/>
+                    <!-- Wrist pivot -->
+                    <circle cx="182" cy="106" r="3.5" class="arm-joint-dot"/>
+
+                    <!-- Claw assembly — opens/closes via group pivots. -->
+                    <g id="viz-claw" style="transform-origin: 182px 106px;">
+                        <!-- Claw body / servo horn -->
+                        <rect x="178" y="100" width="14" height="12" rx="2"
+                              class="arm-claw-body"/>
+                        <!-- Upper finger -->
+                        <g id="viz-claw-upper" style="transform-origin: 192px 102px;">
+                            <path d="M 192 102 L 212 96 L 213 100 L 193 106 Z"
+                                  class="arm-claw-finger-shape"/>
+                        </g>
+                        <!-- Lower finger -->
+                        <g id="viz-claw-lower" style="transform-origin: 192px 112px;">
+                            <path d="M 192 112 L 212 118 L 213 114 L 193 108 Z"
+                                  class="arm-claw-finger-shape"/>
+                        </g>
+                    </g>
+                </g>
             </g>
         </svg>
     </section>

@@ -33,11 +33,15 @@ async function api(path, body) {
 // -----------------------------------------------------------------
 const pads = document.querySelectorAll(".pad");
 
-const axisVisual = {
-    up: "viz-shoulder", down: "viz-shoulder",
-    forward: "viz-elbow", backward: "viz-elbow",
-    rotate_cw: "viz-base", rotate_ccw: "viz-base",
-};
+// All axis names we animate — used to clear any stale class on stop.
+const ALL_AXES = ["up", "down", "forward", "backward", "rotate_cw", "rotate_ccw"];
+
+function setAxisAnim(axis, on) {
+    // Clear every anim-* class first so holding two different axes in a row
+    // doesn't leave a stale pose. Then set the one we want.
+    for (const a of ALL_AXES) document.body.classList.remove(`anim-${a}`);
+    if (on && axis) document.body.classList.add(`anim-${axis}`);
+}
 
 for (const pad of pads) {
     const axis = pad.dataset.axis;
@@ -47,14 +51,14 @@ for (const pad of pads) {
         ev.preventDefault();
         if (pad.classList.contains("active")) return;
         pad.classList.add("active");
-        highlightViz(axis, true);
+        setAxisAnim(axis, true);
         api("/move_start", { axis });
     };
 
     const stop = () => {
         if (!pad.classList.contains("active")) return;
         pad.classList.remove("active");
-        highlightViz(axis, false);
+        setAxisAnim(axis, false);
         api("/stop", {});
     };
 
@@ -70,13 +74,6 @@ for (const pad of pads) {
     });
 }
 
-function highlightViz(axis, on) {
-    const id = axisVisual[axis];
-    if (!id) return;
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle("active-viz", on);
-}
-
 // -----------------------------------------------------------------
 // Stop button
 // -----------------------------------------------------------------
@@ -90,14 +87,20 @@ document.getElementById("btn-stop").addEventListener("click", () => {
 const claw = document.getElementById("claw");
 const clawValue = document.getElementById("claw-value");
 let clawTimer = null;
+function updateClawVisual(angle) {
+    // Pass raw angle to the CSS; the stylesheet converts to a rotation per finger.
+    document.documentElement.style.setProperty("--claw-open", angle);
+}
 claw.addEventListener("input", () => {
     clawValue.textContent = `${claw.value}°`;
+    updateClawVisual(Number(claw.value));  // live, feels instant
     if (clawTimer) clearTimeout(clawTimer);
     clawTimer = setTimeout(
         () => api("/claw", { angle: Number(claw.value) }),
         CLAW_DEBOUNCE_MS
     );
 });
+updateClawVisual(Number(claw.value));  // initial state
 
 // -----------------------------------------------------------------
 // Speed slider (live — changes apply mid-movement)
@@ -189,6 +192,7 @@ async function pollStatus() {
         if (String(rounded) !== claw.value) {
             claw.value = rounded;
             clawValue.textContent = `${rounded}°`;
+            updateClawVisual(rounded);
         }
     }
 }
@@ -211,13 +215,13 @@ document.addEventListener("keydown", (ev) => {
     const axis = keyMap[ev.key.toLowerCase()];
     if (!axis || keyActive[axis]) return;
     keyActive[axis] = true;
-    highlightViz(axis, true);
+    setAxisAnim(axis, true);
     api("/move_start", { axis });
 });
 document.addEventListener("keyup", (ev) => {
     const axis = keyMap[ev.key.toLowerCase()];
     if (!axis || !keyActive[axis]) return;
     delete keyActive[axis];
-    highlightViz(axis, false);
+    setAxisAnim(axis, false);
     api("/stop", {});
 });
