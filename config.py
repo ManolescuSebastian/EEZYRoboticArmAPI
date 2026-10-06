@@ -26,6 +26,13 @@ CLAW_PWM_FREQ_HZ: int = 50
 # original project.
 STEP_DELAY_SEC: float = 0.001
 
+# Speed range exposed to the UI. Delay is inversely proportional to speed:
+# the smallest delay = fastest motion, the largest = slowest. Values below
+# ~0.0007s cause the 28BYJ-48 to stall, so keep SPEED_MIN_DELAY above that.
+SPEED_MIN_DELAY: float = 0.0008   # fastest
+SPEED_MAX_DELAY: float = 0.0030   # slowest
+SPEED_DEFAULT_DELAY: float = STEP_DELAY_SEC
+
 # How many half-steps the API fires per "step" unit requested by the client.
 # One 28BYJ-48 full rotation is 4096 half-steps.
 HALF_STEPS_PER_UNIT: int = 8

@@ -101,9 +101,30 @@ def stop():
     return jsonify(ok=True)
 
 
-@api_bp.route("/recording/clear", methods=["POST"])
-def clear_recording():
-    get_service().clear_recording()
+@api_bp.route("/speed", methods=["POST"])
+def speed():
+    """Set the global motor speed. Takes effect live (mid-movement)."""
+    body = request.get_json(silent=True) or {}
+    value = body.get("value")
+    if not isinstance(value, (int, float)):
+        return jsonify(error="'value' must be a number"), 400
+    if not 1.0 <= value <= 10.0:
+        return jsonify(error="'value' must be between 1 and 10"), 400
+    get_service().set_speed(float(value))
+    return jsonify(ok=True, value=value)
+
+
+@api_bp.route("/recording/start", methods=["POST"])
+def start_recording():
+    """Begin a new recording. Discards any previously captured steps."""
+    get_service().start_recording()
+    return jsonify(ok=True)
+
+
+@api_bp.route("/recording/stop", methods=["POST"])
+def stop_recording():
+    """Stop recording. The captured steps remain available for replay."""
+    get_service().stop_recording()
     return jsonify(ok=True)
 
 

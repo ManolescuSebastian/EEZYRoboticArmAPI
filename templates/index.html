@@ -56,20 +56,31 @@
     <button class="pad rot-cw" data-axis="rotate_cw" aria-label="Rotate clockwise">↻</button>
 </section>
 
-<section class="claw-row">
-    <label for="claw" class="claw-label">
-        CLAW <span id="claw-value">0°</span>
-    </label>
-    <input id="claw" type="range" min="0" max="180" step="1" value="0">
+<section class="sliders">
+    <div class="slider-row">
+        <label for="speed" class="slider-label">
+            SPEED <span id="speed-value">5</span>
+        </label>
+        <input id="speed" type="range" min="1" max="10" step="1" value="5">
+    </div>
+    <div class="slider-row">
+        <label for="claw" class="slider-label">
+            CLAW <span id="claw-value">0°</span>
+        </label>
+        <input id="claw" type="range" min="0" max="180" step="1" value="0">
+    </div>
 </section>
 
 <footer class="recorder">
     <div class="rec-info">
-        <span class="rec-count"><span id="rec-count">0</span> steps</span>
+        <span class="rec-count">
+            <span class="rec-indicator" id="rec-indicator"></span>
+            <span id="rec-count">0</span> steps
+        </span>
         <span class="rec-last" id="rec-last">idle</span>
     </div>
     <div class="rec-actions">
-        <button id="btn-clear" class="rec-btn">Clear</button>
+        <button id="btn-record" class="rec-btn record">● Rec</button>
         <button id="btn-replay" class="rec-btn primary">Replay</button>
     </div>
 </footer>

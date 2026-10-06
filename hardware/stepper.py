@@ -8,11 +8,17 @@ from __future__ import annotations
 import logging
 import threading
 from time import sleep
+from typing import Callable
 
 from . import GPIO
-from config import STEP_DELAY_SEC, HALF_STEPS_PER_UNIT
+from config import HALF_STEPS_PER_UNIT
 
 logger = logging.getLogger(__name__)
+
+# A delay provider is a zero-argument callable returning the current
+# per-half-step delay in seconds. Reading it on every half-step lets the
+# UI change speed live (even mid-movement).
+DelayProvider = Callable[[], float]
 
 # Standard 8-phase half-step sequence for the 28BYJ-48 stepper.
 HALF_STEP_SEQUENCE: tuple[tuple[int, int, int, int], ...] = (
@@ -30,9 +36,15 @@ HALF_STEP_SEQUENCE: tuple[tuple[int, int, int, int], ...] = (
 class Stepper:
     """Drives one stepper motor through four GPIO pins (IN1..IN4)."""
 
-    def __init__(self, pins: tuple[int, int, int, int], name: str = "stepper") -> None:
+    def __init__(
+        self,
+        pins: tuple[int, int, int, int],
+        delay_provider: DelayProvider,
+        name: str = "stepper",
+    ) -> None:
         self.pins = pins
         self.name = name
+        self._delay_provider = delay_provider
         self._configure_pins()
 
     def __repr__(self) -> str:
@@ -61,10 +73,14 @@ class Stepper:
             if stop_event.is_set():
                 logger.debug("%s: stop requested after %d/%d units", self.name, executed, units)
                 break
+            # Read the delay once per unit so changes to speed are picked up
+            # live, without re-reading it between every pin toggle (would make
+            # changes-within-a-unit visible but adds overhead for no gain).
+            delay = self._delay_provider()
             for phase in sequence:
                 for pin_index, pin in enumerate(self.pins):
                     GPIO.output(pin, phase[pin_index])
-                    sleep(STEP_DELAY_SEC)
+                    sleep(delay)
             executed += 1
 
         # Only release if we were interrupted. Otherwise the next batch in a

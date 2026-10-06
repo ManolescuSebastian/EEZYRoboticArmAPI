@@ -5,6 +5,7 @@
 // smooth, with no gaps between HTTP bursts.
 
 const CLAW_DEBOUNCE_MS = 150;
+const SPEED_DEBOUNCE_MS = 60;   // low so the "live" feel is responsive
 const STATUS_POLL_MS = 400;
 
 // -----------------------------------------------------------------
@@ -99,11 +100,42 @@ claw.addEventListener("input", () => {
 });
 
 // -----------------------------------------------------------------
-// Recorder buttons
+// Speed slider (live — changes apply mid-movement)
 // -----------------------------------------------------------------
-document.getElementById("btn-clear").addEventListener("click", () => {
-    api("/recording/clear", {});
+const speed = document.getElementById("speed");
+const speedValue = document.getElementById("speed-value");
+let speedTimer = null;
+speed.addEventListener("input", () => {
+    speedValue.textContent = speed.value;
+    if (speedTimer) clearTimeout(speedTimer);
+    speedTimer = setTimeout(
+        () => api("/speed", { value: Number(speed.value) }),
+        SPEED_DEBOUNCE_MS
+    );
 });
+
+// -----------------------------------------------------------------
+// Recorder buttons (Rec toggles start/stop; Replay plays last recording)
+// -----------------------------------------------------------------
+const btnRecord = document.getElementById("btn-record");
+let recording = false;
+
+function setRecordingUI(on) {
+    recording = on;
+    btnRecord.classList.toggle("recording", on);
+    btnRecord.textContent = on ? "■ Stop" : "● Rec";
+}
+
+btnRecord.addEventListener("click", async () => {
+    if (recording) {
+        await api("/recording/stop", {});
+        setRecordingUI(false);
+    } else {
+        await api("/recording/start", {});
+        setRecordingUI(true);
+    }
+});
+
 document.getElementById("btn-replay").addEventListener("click", () => {
     api("/recording/replay", {});
 });
@@ -114,6 +146,15 @@ document.getElementById("btn-replay").addEventListener("click", () => {
 const statusDot = document.getElementById("status-dot");
 const recCount = document.getElementById("rec-count");
 const recLast = document.getElementById("rec-last");
+const recIndicator = document.getElementById("rec-indicator");
+
+// Avoid clobbering the sliders while the user is actively dragging them.
+let userDraggingSpeed = false;
+let userDraggingClaw = false;
+speed.addEventListener("pointerdown", () => { userDraggingSpeed = true; });
+speed.addEventListener("pointerup",   () => { userDraggingSpeed = false; });
+claw.addEventListener("pointerdown",  () => { userDraggingClaw = true; });
+claw.addEventListener("pointerup",    () => { userDraggingClaw = false; });
 
 async function pollStatus() {
     const s = await api("/status");
@@ -128,6 +169,28 @@ async function pollStatus() {
     statusDot.classList.toggle("online", !s.running);
     recCount.textContent = s.recorded_steps ?? 0;
     recLast.textContent = s.last_action || "idle";
+
+    // Keep the record indicator & button in sync with the server (so a page
+    // reload or a second client doesn't get out of step).
+    recIndicator.classList.toggle("on", !!s.recording);
+    if (!!s.recording !== recording) setRecordingUI(!!s.recording);
+
+    // Reflect server-side speed if the user isn't currently dragging the slider.
+    if (!userDraggingSpeed && typeof s.speed === "number") {
+        const rounded = Math.round(s.speed);
+        if (String(rounded) !== speed.value) {
+            speed.value = rounded;
+            speedValue.textContent = rounded;
+        }
+    }
+    // Same for claw.
+    if (!userDraggingClaw && typeof s.claw_angle === "number") {
+        const rounded = Math.round(s.claw_angle);
+        if (String(rounded) !== claw.value) {
+            claw.value = rounded;
+            clawValue.textContent = `${rounded}°`;
+        }
+    }
 }
 
 pollStatus();
